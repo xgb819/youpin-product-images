@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { PROFILES,sha,readJSON,assert,checkManifest,resolveCopy,alphaBounds,transformBoxes,inside,checkImage,fontPostscriptNames } from './lib/core.mjs';
+import { PROFILES,sha,readJSON,assert,checkManifest,resolveCopy,alphaBounds,coverPlan,transformBoxes,inside,checkImage,fontPostscriptNames } from './lib/core.mjs';
 
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 export async function renderImage(manifestFile,{out,fonts,production=false,replace=false}={}) {
@@ -25,10 +25,11 @@ export async function renderImage(manifestFile,{out,fonts,production=false,repla
   }else{
     const sourceBox={x:0,y:0,width:meta.width,height:meta.height};
     for(const b of s.asset.subject_boxes??[])assert(inside(b,sourceBox),'Subject box is outside source image');
-    subjectBoxes=transformBoxes(s.asset.subject_boxes,meta,p);
+    const reframe=s.asset.reframe??{},plan=coverPlan(meta,p,reframe);
+    subjectBoxes=transformBoxes(s.asset.subject_boxes,meta,p,reframe);
     for(const b of subjectBoxes)assert(inside(b,p.safe,0.001),'Product would be cropped or outside safe area');
     if(production)assert(subjectBoxes.length&&s.asset.subject_review?.source&&s.asset.subject_review.sha256===inputHash,'Production requires reviewed subject boxes bound to asset hash');
-    const bg=await sharp(input).resize(p.width,p.height,{fit:'cover',position:'centre'}).png().toBuffer();
+    const bg=await sharp(input).resize(plan.width,plan.height,{fit:'fill'}).extract({left:plan.cropLeft,top:plan.cropTop,width:p.width,height:p.height}).png().toBuffer();
     layers.push({input:bg,left:0,top:0});
   }
   if(s.kind==='carousel-headline'){
@@ -65,7 +66,7 @@ export async function renderImage(manifestFile,{out,fonts,production=false,repla
     assert(replace||old.revision===s.revision,'Revision already exists here; use a new output directory to retain history');
     assert(replace||old.output_sha256===outputHash,'Image changed; use a new revision and output directory to retain history');
   }catch(e){if(e.code!=='ENOENT')throw e;}
-  const report={schema_version:1,id:s.id,revision:s.revision,kind:s.kind,mode:production?'production':'preview',sku_id:s.sku_id,shared_master_id:s.shared_master_id??null,source:p.source,asset:{file:path.resolve(base,s.asset.file),sha256:inputHash,origin:s.asset.origin??'unspecified'},manifest_sha256:sha(Buffer.from(JSON.stringify(s))),subject_boxes:subjectBoxes,text_boxes:textBoxes,font_files:fontFiles,copy,encoding,output_sha256:outputHash,visual_review:s.visual_review??null};
+  const report={schema_version:1,id:s.id,revision:s.revision,kind:s.kind,mode:production?'production':'preview',sku_id:s.sku_id,shared_master_id:s.shared_master_id??null,source:p.source,asset:{file:path.resolve(base,s.asset.file),sha256:inputHash,origin:s.asset.origin??'unspecified',reframe:s.asset.reframe??null},manifest_sha256:sha(Buffer.from(JSON.stringify(s))),subject_boxes:subjectBoxes,text_boxes:textBoxes,font_files:fontFiles,copy,encoding,output_sha256:outputHash,visual_review:s.visual_review??null};
   const temp=`${file}.${process.pid}.tmp`;
   await fs.writeFile(temp,encoded);
   try{

@@ -50,6 +50,18 @@ test('square scene and first carousel derive from the same actual master',async(
  assert.equal(a.report.asset.sha256,b.report.asset.sha256);assert.equal(a.report.verification.measurements.width,800);assert.equal(b.report.verification.measurements.width,1080);
  assert.equal(a.report.verification.measurements.format,'jpeg');assert.ok(a.report.verification.measurements.bytes<=200000);assert.ok(b.report.verification.measurements.bytes<200000);
 });
+test('scene reframing moves the original photo deterministically without regenerating it',async()=>{
+ const base=await manifest('reframe-base','carousel-first',{asset:{file:photo,subject_boxes:[{x:300,y:400,width:400,height:350}],reframe:{zoom:1.2}}});
+ const moved=await manifest('reframe-down','carousel-first',{asset:{file:photo,subject_boxes:[{x:300,y:400,width:400,height:350}],reframe:{zoom:1.2,offset_y:30}}});
+ const a=await renderImage(base.file,{out:output('reframe-base')}),b=await renderImage(moved.file,{out:output('reframe-down')});
+ assert.equal(Math.round(b.report.subject_boxes[0].y-a.report.subject_boxes[0].y),30);
+ assert.deepEqual(b.report.asset.reframe,{zoom:1.2,offset_y:30});
+ assert.deepEqual(b.report.verification.errors,[]);
+});
+test('reframing rejects offsets that would expose a canvas edge',async()=>{
+ const {file}=await manifest('reframe-gap','carousel-first',{asset:{file:photo,subject_boxes:[{x:300,y:400,width:400,height:350}],reframe:{zoom:1,offset_y:30}}});
+ await assert.rejects(renderImage(file,{out:output('reframe-gap')}),/uncovered canvas edge/);
+});
 test('landscape uses its own conservative 940 by 469 integer safe area',async()=>{
  const landscape=path.join(temp,'landscape.png');await sharp({create:{width:1020,height:615,channels:3,background:'#d6c8b4'}}).png().toFile(landscape);
  const {file}=await manifest('landscape','scene-landscape',{asset:{file:landscape,subject_boxes:[{x:100,y:100,width:700,height:400}]}});

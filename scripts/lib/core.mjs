@@ -47,6 +47,15 @@ export function checkManifest(s) {
     assert(Array.isArray(s.asset.subject_boxes)&&s.asset.subject_boxes.length>0,'subject_boxes must be a nonempty array');
     assert(s.asset.subject_boxes.every(boxValid),'Invalid subject box');
   }
+  if(s.asset.reframe!==undefined){
+    assert(s.kind!=='catalog','Catalog images do not support scene reframing');
+    const r=s.asset.reframe;
+    assert(r&&typeof r==='object'&&!Array.isArray(r),'asset.reframe must be an object');
+    const keys=new Set(['zoom','offset_x','offset_y']);
+    for(const k of Object.keys(r))assert(keys.has(k),`Unknown asset.reframe field: ${k}`);
+    assert(r.zoom===undefined||(Number.isFinite(r.zoom)&&r.zoom>=1&&r.zoom<=2),'asset.reframe.zoom must be between 1 and 2');
+    for(const k of ['offset_x','offset_y'])assert(r[k]===undefined||Number.isFinite(r[k]),`asset.reframe.${k} must be finite`);
+  }
 }
 export { resolveCopy } from './copy-evidence.mjs';
 export async function alphaBounds(input) {
@@ -59,10 +68,17 @@ export async function alphaBounds(input) {
   }
   return {box:x1<0?null:{x:x0,y:y0,width:x1-x0+1,height:y1-y0+1},transparent,area:info.width*info.height};
 }
-export function transformBoxes(boxes, source, target) {
-  const scale=Math.max(target.width/source.width,target.height/source.height);
-  const dx=(target.width-source.width*scale)/2,dy=(target.height-source.height*scale)/2;
-  return (boxes??[]).map(b=>({x:b.x*scale+dx,y:b.y*scale+dy,width:b.width*scale,height:b.height*scale}));
+export function coverPlan(source,target,reframe={}) {
+  const zoom=reframe.zoom??1,offsetX=Math.round(reframe.offset_x??0),offsetY=Math.round(reframe.offset_y??0);
+  const scale=Math.max(target.width/source.width,target.height/source.height)*zoom;
+  const width=Math.max(target.width,Math.ceil(source.width*scale)),height=Math.max(target.height,Math.ceil(source.height*scale));
+  const cropLeft=Math.floor((width-target.width)/2)-offsetX,cropTop=Math.floor((height-target.height)/2)-offsetY;
+  assert(cropLeft>=0&&cropTop>=0&&cropLeft+target.width<=width&&cropTop+target.height<=height,'asset.reframe exposes an uncovered canvas edge; increase zoom or reduce offset');
+  return {width,height,cropLeft,cropTop,scaleX:width/source.width,scaleY:height/source.height,zoom,offsetX,offsetY};
+}
+export function transformBoxes(boxes, source, target, reframe={}) {
+  const plan=coverPlan(source,target,reframe);
+  return (boxes??[]).map(b=>({x:b.x*plan.scaleX-plan.cropLeft,y:b.y*plan.scaleY-plan.cropTop,width:b.width*plan.scaleX,height:b.height*plan.scaleY}));
 }
 export async function whiteOutside(input, boxes) {
   const {data,info}=await sharp(input).flatten({background:'#fff'}).removeAlpha().raw().toBuffer({resolveWithObject:true});
