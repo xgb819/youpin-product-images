@@ -35,7 +35,8 @@
   "asset":{
     "file":"room-master.png",
     "origin":"user",
-    "subject_boxes":[{"x":250,"y":350,"width":600,"height":500}]
+    "subject_boxes":[{"x":250,"y":350,"width":600,"height":500}],
+    "reframe":{"zoom":1.08,"offset_y":35}
   }
 }
 ```
@@ -43,6 +44,8 @@
 只有 `carousel-headline` 接受title/description，值是文案ID，从product文件读取事实和文案。其他四种图位不接受新增文字。此最小程序不接受任意坐标、Logo或其他层，不能用其伪装成已支持的其他版式。
 
 事实/文案结构见 [product-facts.md](product-facts.md)。文字使用 `--fonts` 或 `YOUPIN_FONT_DIR` 指定的真实MiSans OTF目录，核对字体内部PostScript名；不因超宽而缩字号。共用母图按实际源文件哈希认定，不能只看shared_master_id相同。
+
+`asset.reframe`仅用于非透明场景图的确定性重取景：`zoom`为常规cover之后的等比倍率（1–2），`offset_x`正值使内容右移，`offset_y`正值使内容下移，负值反向。参数导致画布露边时渲染器拒绝导出；不得靠纯色补边。主体框使用同一变换进入输出坐标，报告保留reframe参数，方便单图返工复现。选择层级和验收见 [correction-playbook.md](correction-playbook.md)。
 
 ## 正式导出
 
