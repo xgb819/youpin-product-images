@@ -19,6 +19,8 @@ node scripts/verify-image.mjs /path/to/run/image-id.png --report /path/to/run/im
 
 图像/商品清单格式见 [render-manifest.md](render-manifest.md)。默认preview，报告待目检；正式导出显式加 `--production`，不自动把草稿改为已审。脚本支持透明主图、方/横场景、轮播首图和一行标题+描述轮播。详情仍按对应原规范制作；辅助脚本没有实现的版式不能宣称已经自动验收。
 
+完整套图另按 [production-workflow.md](production-workflow.md) 先做素材总览、事实表和图位计划。未盘点全部原图、未生成轮播/详情总览、未逐张打开最终文件时，不能用“批量导出完成”结束任务。
+
 ## 图素和文字
 
 默认保留原来的摄影场景，去字适配不等于抠图换场景或另外生成背景。用户提供的原图足够使用时，不主动做扩图、场景重建和产品重绘；先解决取图、去旧字、裁切、等比缩放及新文字位置。扩图与换场景是确有需要时的备选，不是每套必做环节。

@@ -10,6 +10,8 @@
     "validate": "node scripts/validate-project.mjs",
     "render": "node scripts/render-image.mjs",
     "verify": "node scripts/verify-image.mjs",
+    "check:hero": "node scripts/check-hero-layout.mjs",
+    "inventory": "node scripts/inventory-assets.mjs",
     "listing": "node scripts/export-listing-copy.mjs"
   },
   "dependencies": { "sharp": "0.35.5" },

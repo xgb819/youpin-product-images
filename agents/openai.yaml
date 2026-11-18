@@ -1,3 +1,3 @@
 interface:
   display_name: "有品产品图生成"
-  short_description: "按规范制作商品图片与上架七字段文案，复用事实、检查字数来源，支持单图单字段修改"
+  short_description: "原图优先制作有品主图、轮播、详情与七字段，逐图验收并支持定点返修"

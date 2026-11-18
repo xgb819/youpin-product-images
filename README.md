@@ -18,6 +18,10 @@ node scripts/export-listing-copy.mjs /path/to/listing.json --out /path/to/run
 
 图片默认优先复用本款原图：主图、轮播素材不足时从详情页裁切补充，去旧文案、适配比例和安全区，再排新文字。保留商品印花、结构与配件；确有需要时只扩背景或局部修补，商品重绘按实际需要及用户选择执行。来源及处理区域留档，详见 [image-workflow.md](references/image-workflow.md)。
 
+完整套图不是“套模板后导出”即可完成。必须先做素材总览、事实表和图位计划，再逐张排版；导出后打开轮播/详情总览和每一张成品，检查场景重复、主体裁切、旧字残留、Logo安全区、细节图是否对题及扩图接缝。流程和交付门禁见 [production-workflow.md](references/production-workflow.md)。
+
+Windows 下不要直接使用系统解压处理店透视 ZIP；其中的 `1:1主图` 目录可能因冒号被漏掉。使用 `scripts/expand-source-archive.ps1` 后再运行 `scripts/inventory-assets.mjs` 做素材盘点。
+
 详情页不固定套一种白底卡片模板：完整场景优先采用原图满版加字，汇总、操作、配置和参数采用信息模块。主体场景/图文模块高度不小于宽度，不能靠上下添加空白条补足高度；主打卖点、参数和配置等信息汇总模块按内容自然高度输出，可以低于宽度。超高内容按完整模块切片，不整体缩小；小卡片不从中间裁断，同一场景不重复使用。轮播适配不得截断商品、遥控器或关键配件；横向场景不能安全铺满方图时，优先向上连续扩展场景并把标题放在上方，不用纯色矩形填补剩余画布。白字默认不加投影，安全区不足不以镜像补边或空场景合成强行解决。
 
 AI读取规则，使用现有工具制作图像。本仓库附带Sharp辅助导出程序，不含生图服务、商品识别或自动发布。普通规范查询无需API key、Node或Photoshop。
@@ -27,7 +31,7 @@ AI读取规则，使用现有工具制作图像。本仓库附带Sharp辅助导�
 完整使用本仓库，保留规范原图与模板：
 
 ```text
-安装这个 skill：https://github.com/xgb819/youpin-product-image-generator
+安装这个 skill：https://github.com/xgb819/youpin-product-images
 ```
 
 手动接入时以 `youpin-product-image-generator` 作为技能文件夹。TRAE等使用各自项目技能入口，不假定根目录会自动加载。本Fork技能名由 `mi-product-site-spec` 改为 `youpin-product-image-generator`，原详情来源保留。
@@ -55,6 +59,7 @@ $youpin-product-image-generator 只修改03号轮播标题，复用已确认事�
 | 商品事实、文案依据 | [product-facts.md](references/product-facts.md) |
 | 上架七字段纯文字 | [listing-copy.md](references/listing-copy.md)、[listing-fields.json](references/listing-fields.json) |
 | 导出及单图重做 | [image-workflow.md](references/image-workflow.md)、[render-manifest.md](references/render-manifest.md) |
+| 完整套图制作与视觉验收 | [production-workflow.md](references/production-workflow.md)、[correction-playbook.md](references/correction-playbook.md) |
 
 官方条文、PSD实测、几何推导和实施选择分别记录：轮播上方居中不套到详情头图；横图940×470不套方图640×640；详情两图480px不套轮播486/320px。不凭规范板编号认定所有商品固定7/8张轮播。
 
